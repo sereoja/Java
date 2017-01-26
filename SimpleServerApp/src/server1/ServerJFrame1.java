@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -139,19 +140,46 @@ public class ServerJFrame1 extends javax.swing.JFrame {
               return;
               }
               
-              //==========================================================
-              PrintWriter out = null; //for the server to send response
-              BufferedReader in = null; //for the server to read client request
-              //================================================================
+              jTextArea1.setText("Server is ready at port: 9999");            
               
               while(true){
               try {
                   
-                  jTextArea1.setText("Server is ready at port: 9999");
+                  
                      //get the client making a request
               Socket client = server.accept();
-              out = new PrintWriter(client.getOutputStream(), true);
-              in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+              //display or log client info
+              SocketAddress clientAddress = client.getRemoteSocketAddress();
+              jTextArea1.append("\nClient socket address: " + clientAddress);
+              //Start the client thread
+              Thread thread = new ClientThread(client);
+              thread.start();
+              
+              } catch (IOException ioe) {
+              }
+                
+              }//end of while
+           
+        }//end of run
+        
+    }//end of class serverthread
+    //thread to deal with client
+    private class ClientThread extends Thread{
+        private Socket client;
+        public ClientThread(Socket client){
+        this.client = client;
+        }
+
+        @Override
+        public void run() {
+        
+         //==========================================================
+              PrintWriter out = null; //for the server to send response
+              BufferedReader in = null; //for the server to read client request
+         //================================================================
+              try {
+                out = new PrintWriter(client.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(client.getInputStream()));
               
               //get client request
               String request = in.readLine();
@@ -159,26 +187,20 @@ public class ServerJFrame1 extends javax.swing.JFrame {
               String echoResponse = "echoing client msg: " + request;
               //send response
               out.println(echoResponse);
+            } catch (IOException e) {
+            }finally{
               
-              
-              } catch (IOException ioe) {
-              }finally{
-                    //close the streams
-                 try { 
+              try { 
                        if (in != null)in.close();
                        if (out != null)out.close();
                     } catch (IOException ex) {
                         Logger.getLogger(ServerJFrame1.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                   
-                            
-                  }
-                
-              }//end of while
-           
+                    }}
+              
         }//end of run
         
-    }//end of class
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnStartServer;
     private javax.swing.JScrollPane jScrollPane1;
